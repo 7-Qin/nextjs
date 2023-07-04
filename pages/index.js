@@ -4,9 +4,6 @@ import styles from "../styles/Home.module.css";
 import { useContract, useTransferToken,useClaimToken, Web3Button } from "@thirdweb-dev/react";
 import axios from 'axios';
 
-const contractAddress = "{{contract_address}}";
-const toAddress = "{{to_address}}";
-const amount = "{{amount}}";
 
 export default function Home() {
   const [description, setDescription] = useState('Make Azuki Great Again!');
@@ -15,10 +12,10 @@ export default function Home() {
   const [showTitle, setShowTitle] = useState(true);
 
   const [investmentAmount, setInvestmentAmount] = useState(0);
-  const investorPublicKey = useAddress();
-  const referrerPublicKey = new URL(window.location.href).searchParams.get("refer");
+  const [referrerPublicKey, setReferrerPublicKey] = useState(null);
 
 
+  //字体特效
   useEffect(() => {
     const timer = setInterval(() => {
       setShowDescription(false);
@@ -34,56 +31,10 @@ export default function Home() {
     return () => clearInterval(timer); // Clean up on component unmount
   }, []);
 
-    // Contract must be an ERC-20 contract
-    const { contract } = useContract(contractAddress);
-    const {
-      mutate: transferTokens,
-      isLoading,
-      error,
-    } = useTransferToken(contract);
 
-    const { mutateAsync: claimToken } = useClaimToken(contract);
 
-    const handleInvestment = async () => {
-      try {
-        await claimToken({ to: investorPublicKey, amount: investmentAmount });
-        await axios.get('https://nodejs.meme-crush.com/api/investment', {
-          params: {
-            investorPublicKey,
-            referrerPublicKey,
-            investmentAmount,
-            timestamp: new Date().toISOString()
-          }
-        });
-      } catch (err) {
-        console.error(err);
-      }
-    };
 
-    useEffect(() => {
-      const urlParams = new URLSearchParams(window.location.search);
-      setReferrerPublicKey(urlParams.get('refer'));
-    }, []);
   
-    async function handleSubmit(event) {
-      event.preventDefault();
-  
-      const amount = event.target.elements.email.value;
-  
-      try {
-        const response = await axios.get('https://nodejs.meme-crush.com/api/investment', {
-          params: {
-            investorPublicKey: address,
-            referrerPublicKey: referrerPublicKey,
-            investmentAmount: amount
-          }
-        });
-  
-        console.log(response.data);
-      } catch (err) {
-        console.error('Error sending request:', err);
-      }
-    }
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-gray-900">
@@ -157,38 +108,28 @@ export default function Home() {
             <p>Azuki Crush, a Match-3 game based on the Azuki theme, was built by a group of Azuki advocates and long-term Azuki holders to express their anger towards Azuki's recent actions.Azuki Crush, a Match-3 game based on the Azuki theme, was built by a group of Azuki advocates and long-term Azuki holders to express their anger towards Azuki's recent actions.Azuki Crush, a Match-3 game based on the Azuki theme, was built by a group of Azuki advocates and long-term Azuki holders to express their anger towards Azuki's recent actions.Azuki Crush, a Match-3 game based on the Azuki theme, was built by a group of Azuki advocates and long-term Azuki holders to express their anger towards Azuki's recent actions. </p>
           </div>
           <div className="idoForm">
-            {/* <input type="text" placeholder="Enter amount" className="idoInput" />
-            <Web3Button
-              contractAddress={contractAddress}
-              action={() =>
-                transferTokens({
-                  to: toAddress, // Address to transfer to
-                  amount: amount, // Amount to transfer
-                })
-              }
-            >
-              Transfer
-            </Web3Button> */}      <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-          <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-white">
-            Get $AZUKI Now
-          </h2>
-        </div>
+          
+          <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
+          <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+            <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-white">
+              Get $AZUKI Now
+            </h2>
+          </div>
 
-        <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+          <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
           {/* TODO */}
           {/* 这个就是发送http get https://nodejs.meme-crush.com/api/investment的地方 */}
           <form className="space-y-6" action="#" method="POST">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium leading-6 text-white">
+              <label htmlFor="ethAmount" className="block text-sm font-medium leading-6 text-white">
                 How much $ETH do you want to send?
               </label>
               <div className="mt-2">
                 <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
+                  id="ethAmount"
+                  name="ethAmount"
+                  type="ethAmount"
+                  autoComplete="ethAmount"
                   required
                   className="block w-full rounded-md border-0 py-1.5 text-white shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-white focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 />
@@ -208,12 +149,7 @@ export default function Home() {
         </div>
       </div>
           </div>
-
         </section>
-
-
-
-        
       </main>
       
     </div>
