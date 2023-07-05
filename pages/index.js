@@ -6,15 +6,11 @@ import axios from 'axios';
 
 
 export default function Home() {
+  //字体特效
   const [description, setDescription] = useState('Make Azuki Great Again!');
   const [title, setTitle] = useState('Welcome to Azuki Crush');
   const [showDescription, setShowDescription] = useState(true);
   const [showTitle, setShowTitle] = useState(true);
-
-  const [investmentAmount, setInvestmentAmount] = useState(0);
-  const [referrerPublicKey, setReferrerPublicKey] = useState(null);
-
-
   //字体特效
   useEffect(() => {
     const timer = setInterval(() => {
@@ -32,7 +28,65 @@ export default function Home() {
   }, []);
 
 
+  // Crypto与Claim相关
+  // 你的智能合约地址
+  const contractAddress = "0x3E2FBD482802De1d2e8BB80BB0C1f0EBaBc0b061";
 
+  const [investmentAmount, setInvestmentAmount] = useState(0);
+  const [referrerPublicKey, setReferrerPublicKey] = useState(null);
+
+  const address = useAddress();  // 使用useAddress hook来获取当前钱包地址
+  const { contract } = useContract(contractAddress);  // 使用useContract hook来获取你的智能合约
+  const { mutateAsync: claimToken, isLoading, error } = useClaimToken(contract);  // 使用useClaimToken hook来实现token的claim
+
+  // 从URL中获取referrerPublicKey
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    setReferrerPublicKey(urlParams.get('refer'));
+  }, []);
+
+  // console.log("address"+address);
+
+  const handleInvestmentAmountChange = (event) => {
+    const value = event.target.value;
+    if (!isNaN(value) && Number(value) >= 0) {
+      setInvestmentAmount(value);
+    } else {
+      alert('Please enter a valid number.');
+    }
+  };
+
+  const handleClaimToken = async () => {
+    try {
+      await claimToken({
+        to: address,  // 使用useAddress hook来获取当前钱包地址
+        amount: investmentAmount,  // 从输入框中获取要claim的token数量
+      });
+  
+      // 如果claim成功，保存数据到MongoDB
+      await saveToMongoDB();
+    } catch (error) {
+      console.error('Error claiming token:', error);
+    }
+  };
+  
+  // console.log("referrerPublicKey is"+referrerPublicKey);
+  async function saveToMongoDB() {
+    try {
+      const response = await axios.get('https://nodejs.meme-crush.com/api/investment', {
+        params: {
+          investorPublicKey: address,
+          referrerPublicKey: referrerPublicKey,
+          investmentAmount: investmentAmount
+        }
+      });
+  
+      console.log(response.data);
+    } catch (err) {
+      console.error('Error sending request:', err);
+    }
+  }
+  
 
   
 
@@ -128,24 +182,21 @@ export default function Home() {
                 <input
                   id="ethAmount"
                   name="ethAmount"
-                  type="ethAmount"
-                  autoComplete="ethAmount"
+                  type="number"
                   required
+                  onChange={handleInvestmentAmountChange}
                   className="block w-full rounded-md border-0 py-1.5 text-white shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-white focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 />
               </div>
             </div>
-            {/* checkbox */}
-
-            <div>
-              <button
-                type="submit"
-                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-              >
-                Get $AZUKI Now
-              </button>
-            </div>
+            <Web3Button
+              contractAddress={contractAddress}
+              action={handleClaimToken}
+            >
+              Claim Token
+            </Web3Button>
           </form>
+
         </div>
       </div>
           </div>
